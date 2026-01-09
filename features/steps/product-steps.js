@@ -1,0 +1,29 @@
+import { When, Then, After } from 'cucumber';
+import assert from 'node:assert';
+import { Builder, By, until } from 'selenium-webdriver';
+
+When('we request the products list', async function () {
+    this.driver = new Builder()
+        .forBrowser('chrome')
+        .build();
+
+    this.driver.wait(until.elementLocated(By.tagName('h1')));
+
+    await this.driver.get('http://localhost:4200');
+});
+
+Then('we should receive', async function (dataTable) {
+    var productElements = await this.driver.findElements(By.className('product'));
+    var expectations = dataTable.hashes();
+    for (let i = 0; i < expectations.length; i++) {
+        const productName = await productElements[i].findElement(By.tagName('h3')).getText();
+        assert.equal(productName, expectations[i].name);
+
+        const description = await productElements[i].findElement(By.tagName('p')).getText();
+        assert.equal(description, `Description: ${expectations[i].description}`);
+    }
+});
+
+After(async function() {
+    this.driver.close();
+});
